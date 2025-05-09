@@ -190,7 +190,7 @@ if "processed_resumes" in st.session_state:
         matching_results = match_skills_with_tokenization(job_file, st.session_state["processed_resumes"])
 
         # 保存匹配結果到 JSON 文件
-        matching_output_path = "/Users/stella/Desktop/Resume_Screening_Solution/matching_results.json"
+        matching_output_path = "/workspaces/blank-app/matching_results.json"
         with open(matching_output_path, "w", encoding="utf-8") as f:
             json.dump(matching_results, f, indent=2, ensure_ascii=False)
 
@@ -208,8 +208,8 @@ if "matching_results" in st.session_state:
     st.header("Step 5: Calculate Similarity")
     if st.button("Calculate Similarity"):
         ranked_results = calculate_similarity_and_rank(
-            input_file="/Users/stella/Desktop/Resume_Screening_Solution/matching_results.json",
-            output_file="/Users/stella/Desktop/Resume_Screening_Solution/ranked_results.json"
+            input_file="/workspaces/blank-app/matching_results.json",
+            output_file="/workspaces/blank-app/ranked_results.json"
         )
 
         st.success("Similarity calculation completed and saved to ranked_results.json")
