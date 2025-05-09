@@ -169,7 +169,7 @@ if uploaded_files:
         processed_resumes = process_resumes(uploaded_files)
 
         # 保存結果到 JSON 文件
-        output_path = "/Users/stella/Desktop/Resume_Screening_Solution/processed_resumes.json"
+        output_path = "/workspaces/blank-app/processed_resumes.json"
         with open(output_path, "w", encoding="utf-8") as f:
             json.dump(processed_resumes, f, indent=2, ensure_ascii=False)
 
@@ -186,7 +186,7 @@ if uploaded_files:
 if "processed_resumes" in st.session_state:
     st.header("Step 4: Match Skills")
     if st.button("Match Skills"):
-        job_file = "/Users/stella/Desktop/Resume_Screening_Solution/job_parsed.json"
+        job_file = "/workspaces/blank-app/job_parsed.json"
         matching_results = match_skills_with_tokenization(job_file, st.session_state["processed_resumes"])
 
         # 保存匹配結果到 JSON 文件
