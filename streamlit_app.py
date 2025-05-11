@@ -6,7 +6,7 @@ import spacy
 from rapidfuzz import fuzz
 import matplotlib.pyplot as plt
 
-# 確保 spaCy 模型已安裝
+# Load English NLP model
 try:
     nlp = spacy.load("en_core_web_sm")
 except OSError:
@@ -21,9 +21,9 @@ def custom_suffix_cleaning(lemma: str) -> str:
         return lemma[:-3]
     return lemma
 
-def extract_text_from_pdf(uploaded_file) -> str:
+def extract_text_from_pdf(file) -> str:
     try:
-        reader = PdfReader(uploaded_file)
+        reader = PdfReader(file)
         text = ""
         for page in reader.pages:
             text += page.extract_text() or ""
@@ -46,7 +46,7 @@ def preprocess_text(text: str) -> List[str]:
     return lemmas
 
 def generate_ngrams(words: List[str], n: int) -> List[str]:
-    return [' '.join(words[i:i + n]) for i in range(len(words) - n + 1)]
+    return [' '.join(words[i:i+n]) for i in range(len(words)-n+1)]
 
 def process_resumes(uploaded_files) -> List[dict]:
     results = []
@@ -56,14 +56,15 @@ def process_resumes(uploaded_files) -> List[dict]:
         bigrams = generate_ngrams(lemmas, 2)
         trigrams = generate_ngrams(lemmas, 3)
         tokenized_phrases = lemmas + bigrams + trigrams
-        results.append({
+        result = {
             "id": uploaded_file.name.split(".")[0],
             "lemmas": lemmas,
             "tokenized_phrases": tokenized_phrases
-        })
+        }
+        results.append(result)
     return results
 
-def match_skills_with_tokenization(job_data: List[dict], resume_data: List[dict], threshold: int = 85) -> List[dict]:
+def match_skills_with_tokenization(job_data: List[dict], resume_data: List[dict], threshold: int = 80) -> List[dict]:
     results = []
     for job in job_data:
         job_id = job['id']
@@ -97,9 +98,9 @@ def calculate_jaccard_similarity(set1: Set[str], set2: Set[str]) -> float:
     union = len(set1 | set2)
     return intersection / union if union > 0 else 0
 
-def calculate_similarity_and_rank(matching_data: List[dict]) -> List[dict]:
+def calculate_similarity_and_rank(matching_results: list) -> list:
     ranked_results = []
-    for result in matching_data:
+    for result in matching_results:
         job_id = result["job_id"]
         job_title = result["job_title"]
         matched_skills = set(result["matched_skills"])
@@ -122,6 +123,7 @@ def plot_similarity_bar_chart(ranked_results, resume_id):
     if not filtered:
         st.warning(f"No results for resume: {resume_id}")
         return
+
     n = 25
     for i, chunk in enumerate([filtered[:n], filtered[n:]]):
         if not chunk:
@@ -139,64 +141,52 @@ def plot_similarity_bar_chart(ranked_results, resume_id):
         plt.tight_layout()
         st.pyplot(fig)
 
-# === Streamlit UI ===
+# --- Streamlit UI ---
 st.set_page_config(page_title="Resume Screening System", layout="wide")
-st.title("📄 Resume Screening System")
+st.markdown("# 🛫 Resume Screening System")
+st.markdown("### Upload your CVs and get instant matching & visual analytics!")
 
-# Step 1: Upload Resumes
-st.header("Step 1: Upload PDF Resumes")
-uploaded_files = st.file_uploader("Upload resumes (PDF only)", type="pdf", accept_multiple_files=True)
+with st.sidebar:
+    st.header("Navigation")
+    page = st.radio("Go to", ["Home (Upload & Process)", "View Results"])
 
-# Step 2: Preprocessing
-if uploaded_files:
-    if st.button("Run Preprocessing"):
+if page == "Home (Upload & Process)":
+    st.subheader("Step 1: Upload CVs")
+    upload_mode = st.radio("Select upload mode:", ["Single CV (PDF)", "Multiple CVs (PDF Folder)"])
+    if upload_mode == "Single CV (PDF)":
+        uploaded_files = st.file_uploader("Upload a single PDF resume", type="pdf", accept_multiple_files=False)
+        if uploaded_files:
+            uploaded_files = [uploaded_files]
+    else:
+        uploaded_files = st.file_uploader("Upload multiple PDF resumes (select all PDFs in a folder)", type="pdf", accept_multiple_files=True)
+
+    job_json_file = st.file_uploader("Step 2: Upload job_parsed.json", type="json")
+
+    if uploaded_files and job_json_file:
+        st.info("Processing resumes, please wait...")
         processed_resumes = process_resumes(uploaded_files)
         st.session_state["processed_resumes"] = processed_resumes
-        st.success(f"Processed {len(processed_resumes)} resumes.")
-        st.download_button(
-            label="⬇️ Download Processed Resumes JSON",
-            data=json.dumps(processed_resumes, indent=2, ensure_ascii=False),
-            file_name="processed_resumes.json",
-            mime="application/json"
-        )
-        st.json(processed_resumes)
 
-# Step 3: Upload Job Description JSON
-if "processed_resumes" in st.session_state:
-    st.header("Step 3: Upload Job Descriptions (JSON)")
-    job_file = st.file_uploader("Upload job_parsed.json", type="json")
-    if job_file is not None:
-        job_data = json.load(job_file)
-        if st.button("Match Skills"):
-            matching_results = match_skills_with_tokenization(job_data, st.session_state["processed_resumes"])
-            st.session_state["matching_results"] = matching_results
-            st.success("Skill matching complete.")
-            st.download_button(
-                label="⬇️ Download Matching Results JSON",
-                data=json.dumps(matching_results, indent=2, ensure_ascii=False),
-                file_name="matching_results.json",
-                mime="application/json"
-            )
-            st.json(matching_results)
+        job_data = json.load(job_json_file)
+        matching_results = match_skills_with_tokenization(job_data, processed_resumes)
+        st.session_state["matching_results"] = matching_results
 
-# Step 4: Similarity Calculation
-if "matching_results" in st.session_state:
-    st.header("Step 4: Calculate Jaccard Similarity")
-    if st.button("Calculate Similarity"):
-        ranked_results = calculate_similarity_and_rank(st.session_state["matching_results"])
+        ranked_results = calculate_similarity_and_rank(matching_results)
         st.session_state["ranked_results"] = ranked_results
-        st.success("Similarity ranking completed.")
-        st.download_button(
-            label="⬇️ Download Ranked Results JSON",
-            data=json.dumps(ranked_results, indent=2, ensure_ascii=False),
-            file_name="ranked_results.json",
-            mime="application/json"
-        )
+
+        st.success("All steps completed! Go to 'View Results' in the sidebar to see the charts.")
+        st.write("### Processed Resumes")
+        st.json(processed_resumes)
+        st.write("### Matching Results")
+        st.json(matching_results)
+        st.write("### Ranked Results")
         st.json(ranked_results)
 
-# Step 5: View Results
-if "ranked_results" in st.session_state:
-    st.header("Step 5: View Similarity Charts")
-    resume_ids = sorted(set(r["resume_id"] for r in st.session_state["ranked_results"]))
-    selected_resume = st.selectbox("Select a resume to view similarity chart:", resume_ids)
-    plot_similarity_bar_chart(st.session_state["ranked_results"], selected_resume)
+if page == "View Results":
+    st.subheader("Similarity Charts")
+    if "ranked_results" not in st.session_state:
+        st.warning("Please upload and process resumes first on the Home page.")
+    else:
+        resume_ids = sorted(set(r["resume_id"] for r in st.session_state["ranked_results"]))
+        selected_resume = st.selectbox("Select a resume to view similarity chart:", resume_ids)
+        plot_similarity_bar_chart(st.session_state["ranked_results"], selected_resume)
