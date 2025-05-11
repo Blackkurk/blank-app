@@ -5,6 +5,7 @@ from PyPDF2 import PdfReader
 import spacy
 from rapidfuzz import fuzz
 import matplotlib.pyplot as plt
+import requests
 
 # Load English NLP model
 try:
@@ -142,6 +143,11 @@ def plot_similarity_bar_chart(ranked_results, resume_id):
         st.pyplot(fig)
 
 # --- Streamlit UI ---
+
+url = "https://drive.google.com/file/d/1TSvDI4EgXL7OvkBYJLl1Dm7LSnmQB5CT/view?usp=sharing"
+response = requests.get(url)
+job_data = response.json()
+
 st.set_page_config(page_title="Resume Screening System", layout="wide")
 st.markdown("# 🛫 Resume Screening System")
 st.markdown("### Upload your CVs and get instant matching & visual analytics!")
@@ -160,13 +166,11 @@ if page == "Home (Upload & Process)":
     else:
         uploaded_files = st.file_uploader("Upload multiple PDF resumes (select all PDFs in a folder)", type="pdf", accept_multiple_files=True)
 
-    job_json_file = "/workspaces/blank-app/job_parsed.json"
     if uploaded_files:
         st.info("Processing resumes, please wait...")
         processed_resumes = process_resumes(uploaded_files)
         st.session_state["processed_resumes"] = processed_resumes
 
-        job_data = json.load(job_json_file)
         matching_results = match_skills_with_tokenization(job_data, processed_resumes)
         st.session_state["matching_results"] = matching_results
 
