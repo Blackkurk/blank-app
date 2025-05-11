@@ -160,8 +160,7 @@ if page == "Home (Upload & Process)":
     else:
         uploaded_files = st.file_uploader("Upload multiple PDF resumes (select all PDFs in a folder)", type="pdf", accept_multiple_files=True)
 
-    job_json_file = st.file_uploader("Step 2: Upload job_parsed.json", type="json")
-
+    job_json_file = "/workspaces/blank-app/job_parsed.json"
     if uploaded_files and job_json_file:
         st.info("Processing resumes, please wait...")
         processed_resumes = process_resumes(uploaded_files)
