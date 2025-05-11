@@ -144,7 +144,7 @@ def plot_similarity_bar_chart(ranked_results, resume_id):
 
 # --- Streamlit UI ---
 
-url = "https://drive.google.com/file/d/1TSvDI4EgXL7OvkBYJLl1Dm7LSnmQB5CT/view?usp=sharing"
+url = "https://drive.google.com/uc?export=download&id=1TSvDI4EgXL7OvkBYJLl1Dm7LSnmQB5CT"
 response = requests.get(url)
 job_data = response.json()
 
