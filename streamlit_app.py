@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 import datetime
+import requests
 
 nlp = spacy.load("en_core_web_sm")
 
