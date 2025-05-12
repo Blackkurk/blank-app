@@ -218,6 +218,7 @@ def process_resumes(uploaded_files):
         results.append(result)
         os.remove(uploaded_file.name)
     return results
+
 def match_skills_with_tokenization(job_data: List[dict], resume_data: List[dict], threshold: int = 80) -> List[dict]:
     results = []
     for job in job_data:
@@ -534,7 +535,7 @@ if page == "Home (Upload & Process)":
 
         url = "https://drive.google.com/uc?export=download&id=1RF3vet0zAQbk1u47YzoXUlgyUpVOx2wW"
         response = requests.get(url)
-        job_data = response.json()["jobs"]
+        job_data = response.json()
         matching_results = match_skills_with_tokenization(job_data, processed_resumes)
         st.session_state["matching_results"] = matching_results
 
