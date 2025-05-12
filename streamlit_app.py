@@ -219,9 +219,7 @@ def process_resumes(uploaded_files):
         os.remove(uploaded_file.name)
     return results
 
-def match_skills_with_tokenization(job_file: str, resume_data: List[dict], threshold: int = 80) -> List[dict]:
-    with open(job_file, 'r', encoding='utf-8') as f:
-        job_data = json.load(f)
+def match_skills_with_tokenization(job_data: List[dict], resume_data: List[dict], threshold: int = 80) -> List[dict]:
     results = []
     for job in job_data:
         job_id = job['id']
