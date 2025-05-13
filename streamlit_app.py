@@ -505,8 +505,8 @@ def show_applicant_overview(ranked_results):
 
 # --- Streamlit UI ---
 st.set_page_config(page_title="Resume Screening System", layout="wide")
-st.markdown("# 🛫 Resume Screening System")
-st.markdown("### Upload your CVs and get instant matching & visual analytics!")
+st.markdown("# Resume Screening System")
+st.markdown("### Upload your CVs and get instant matching & visual analytics")
 
 with st.sidebar:
     st.header("Navigation")
@@ -542,13 +542,7 @@ if page == "Home (Upload & Process)":
         ranked_results = calculate_similarity_and_rank(matching_results)
         st.session_state["ranked_results"] = ranked_results
 
-        st.success("All steps completed! Go to 'View Results' in the sidebar to see the charts.")
-        st.write("### Processed Resumes")
-        st.json(processed_resumes)
-        st.write("### Matching Results")
-        st.json(matching_results)
-        st.write("### Ranked Results")
-        st.json(ranked_results)
+        st.success("All steps completed! Go to 'Grouped Bar Chart' in the sidebar to see the charts.")
         
 if page == "Grouped Bar Chart":
     resume_ids = sorted(set(r["resume_id"] for r in st.session_state["ranked_results"]))
